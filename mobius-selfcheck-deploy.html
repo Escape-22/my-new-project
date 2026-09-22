@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>뫼비우스 반전 자기점검</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f1e6;
+  --surface: #fffdf8;
+  --ink: #1a2b4a;
+  --ink-soft: #4b5872;
+  --teal: #1f7e79;
+  --teal-deep: #17615d;
+  --teal-soft: #dcefec;
+  --on-teal: #fffdf8;
+  --gold: #b58a2b;
+  --line: #d8cfb8;
+  --warn: #a63a4d;
+  --warn-soft: #f7e4e6;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a2c;
+    --surface: #16243a;
+    --ink: #f0ead8;
+    --ink-soft: #b7bfcf;
+    --teal: #56b8b0;
+    --teal-deep: #7fd0c8;
+    --teal-soft: #1b3a44;
+    --on-teal: #0f1a2c;
+    --gold: #d8b45c;
+    --line: #2b3b55;
+    --warn: #e58a98;
+    --warn-soft: #3a2029;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1a2c;
+  --surface: #16243a;
+  --ink: #f0ead8;
+  --ink-soft: #b7bfcf;
+  --teal: #56b8b0;
+  --teal-deep: #7fd0c8;
+  --teal-soft: #1b3a44;
+  --on-teal: #0f1a2c;
+  --gold: #d8b45c;
+  --line: #2b3b55;
+  --warn: #e58a98;
+  --warn-soft: #3a2029;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Apple SD Gothic Neo", "AppleSDGothicNeo", "Noto Sans KR", "Malgun Gothic", "Nanum Gothic", system-ui, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.85;
+  text-align: left;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.25rem calc(1.1rem + env(safe-area-inset-right, 0px)) 4rem calc(1.1rem + env(safe-area-inset-left, 0px));
+}
+h1, h2, h3, h4 { margin: 0; line-height: 1.35; color: var(--ink); }
+h1 { font-size: clamp(2rem, 8vw, 2.6rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.6rem, 6vw, 2rem); font-weight: 700; }
+h3 { font-size: 1.3rem; font-weight: 700; }
+h4 { font-size: 1.1rem; font-weight: 700; color: var(--teal-deep); margin: 1.3rem 0 .2rem; }
+p { margin: .6rem 0; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+#focus:focus { outline: none; }
+
+.hero { text-align: left; padding: .5rem 0 1rem; }
+.hero .lem { display: block; width: 100%; height: auto; margin: 0 0 1rem; }
+.lede { font-size: 1.15rem; color: var(--ink-soft); margin: .8rem 0 0; }
+.small { font-size: 1.0625rem; color: var(--ink-soft); }
+
+.lem path { fill: none; stroke: var(--line); stroke-width: 2.2; }
+.lem .node circle { fill: var(--surface); stroke: var(--line); stroke-width: 2; }
+.lem .node text { fill: var(--ink-soft); font-size: 17px; font-family: "Times New Roman", "Noto Serif Hebrew", "Arial Hebrew", serif; }
+.lem .node.done circle { fill: var(--teal); stroke: var(--teal); }
+.lem .node.done text { fill: var(--on-teal); }
+.lem .node.now circle { stroke: var(--gold); stroke-width: 3.5; }
+.lem .node.now text { fill: var(--ink); }
+.lem .node.l1 circle { fill: var(--teal); fill-opacity: .14; stroke: var(--teal); }
+.lem .node.l2 circle { fill: var(--teal); fill-opacity: .38; stroke: var(--teal); }
+.lem .node.l3 circle { fill: var(--teal); fill-opacity: .72; stroke: var(--teal); }
+.lem .node.l4 circle { fill: var(--teal); fill-opacity: 1; stroke: var(--teal); }
+.lem .node.l1 text, .lem .node.l2 text { fill: var(--ink); }
+.lem .node.l3 text, .lem .node.l4 text { fill: var(--on-teal); }
+
+.prog { margin-bottom: .6rem; }
+.prog .lem { display: block; width: 100%; max-width: 22rem; height: auto; margin: 0 auto; }
+.progtxt { text-align: center; margin: .2rem 0 0; color: var(--ink-soft); font-size: 1.0625rem; }
+
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 1.1rem 1.15rem;
+  margin: 1rem 0;
+}
+.card > label, .codebox > label { display: block; font-weight: 700; margin-bottom: .35rem; }
+.codecard > summary, .adm > summary, .body > summary { cursor: pointer; font-weight: 700; font-size: 1.15rem; }
+.codecard > summary::marker, .adm > summary::marker, .body > summary::marker { color: var(--teal); }
+
+input[type="text"], textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 1.125rem;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: .75rem .85rem;
+}
+textarea { line-height: 1.6; margin-top: .7rem; resize: vertical; }
+.row { display: flex; gap: .6rem; }
+.row input { flex: 1; min-width: 0; }
+
+.btn {
+  font: inherit;
+  font-size: 1.125rem;
+  font-weight: 700;
+  min-height: 3.2rem;
+  padding: .55rem 1.3rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--teal);
+  background: var(--teal);
+  color: var(--on-teal);
+  cursor: pointer;
+}
+.btn.ghost { background: transparent; color: var(--teal-deep); }
+.btn.wide { display: block; width: 100%; margin-top: .7rem; }
+.msg { min-height: 1.5rem; margin: .5rem 0 0; color: var(--ink-soft); font-size: 1.0625rem; }
+.savetxt { min-height: 1.4rem; margin: .8rem 0 0; color: var(--ink-soft); font-size: 1rem; text-align: right; }
+.demo { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: .6rem .9rem; font-weight: 700; font-size: 1rem; margin: 0 0 .8rem; }
+.ok { color: var(--teal-deep); font-weight: 700; margin: .8rem 0; }
+.err { color: var(--warn); font-weight: 700; min-height: 1.5rem; margin: 1rem 0 0; }
+
+.stagehead { margin: 1rem 0 1.4rem; }
+.qsubtitle { font-size: 1.15rem; color: var(--teal-deep); font-weight: 500; margin: .6rem 0 0; }
+.intro {
+  background: var(--teal-soft);
+  border-left: 4px solid var(--teal);
+  border-radius: 4px 12px 12px 4px;
+  padding: .5rem 1rem;
+  margin-top: 1rem;
+}
+.intro p { margin: .55rem 0; }
+
+.item {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 1.1rem 1.05rem 1.2rem;
+  margin: 1rem 0;
+}
+.item.missing, .part.missing { border-color: var(--warn); background: var(--warn-soft); }
+.part.missing { border-radius: 10px; border-width: 1.5px; border-style: solid; padding: .5rem; }
+.qhead { display: flex; gap: .8rem; align-items: flex-start; }
+.qn {
+  flex: none;
+  width: 2.2rem; height: 2.2rem;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: .15rem;
+}
+.qsub { margin: 0; font-weight: 700; color: var(--teal-deep); }
+.qstem { margin: 0; font-size: 1.2rem; font-weight: 500; line-height: 1.7; }
+.pstem { margin-top: 1rem; }
+.pl { display: inline-block; margin-right: .5rem; font-weight: 700; color: var(--teal-deep); }
+.opts { margin-top: .5rem; }
+.opt {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: .7rem;
+  padding: .9rem 1rem;
+  margin-top: .6rem;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+}
+.opt input { position: absolute; opacity: 0; pointer-events: none; }
+.opt:focus-within { outline: 3px solid var(--gold); outline-offset: 2px; }
+.opt.sel { border-color: var(--teal); background: var(--teal-soft); box-shadow: inset 0 0 0 1px var(--teal); }
+.mark { flex: none; width: 1.5rem; font-size: 1.3rem; line-height: 1.5; color: var(--teal); }
+.txt { flex: 1; line-height: 1.7; }
+
+.nav { display: flex; justify-content: space-between; gap: .8rem; margin-top: 1.4rem; }
+.nav .btn { flex: 1; }
+
+.res {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 1.1rem 1.15rem;
+  margin: 1rem 0;
+}
+.reshead { display: flex; gap: .9rem; align-items: flex-start; }
+.glyph {
+  flex: none;
+  width: 2.6rem; height: 2.6rem;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; line-height: 1;
+  font-family: "Times New Roman", "Noto Serif Hebrew", "Arial Hebrew", serif;
+  color: var(--ink);
+}
+.lvline { margin: .4rem 0 0; font-size: 1.15rem; }
+.chip {
+  display: inline-block;
+  margin-right: .5rem;
+  padding: 0 .55rem;
+  border-radius: 999px;
+  background: var(--teal);
+  color: var(--on-teal);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+.meter { display: flex; gap: 4px; margin: .8rem 0 .2rem; }
+.meter i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); }
+.meter i.on { background: var(--teal); }
+.body { margin-top: .9rem; border-top: 1px solid var(--line); padding-top: .8rem; }
+.say {
+  border-left: 4px solid var(--teal);
+  padding: .2rem 0 .2rem .9rem;
+  color: var(--teal-deep);
+  font-weight: 500;
+}
+.lvblock { border-top: 1px solid var(--line); margin-top: 1.1rem; padding-top: 1rem; }
+.lvblock:first-of-type { border-top: 0; margin-top: .8rem; }
+.adm { padding: 1rem 1.15rem; }
+.tools .btn.wide { margin-top: .7rem; }
+
+@media (max-width: 30rem) {
+  .row { flex-direction: column; }
+  .nav .btn { padding-left: .6rem; padding-right: .6rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .opt, .btn { transition: background-color .12s ease, border-color .12s ease; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<noscript><p style="padding:1rem">이 페이지는 자바스크립트가 켜져 있어야 작동합니다.</p></noscript>
+<script type="application/json" id="data">{"stages":[{"id":"beth","label":"베스","letter":"ב","qTitle":"베스 · 심리적 피난처","qSub":null,"intro":["다음 질문은 평소의 이상적인 모습이 아니라, 스트레스가 크거나 여러 가지 일을 동시에 감당해야 할 때 실제로 자신에게 나타나는 모습을 기준으로 답해 주세요. 특히 자신에게 중요한 사람들과의 관계에서 어떤 선택을 하고, 어떻게 반응하는지를 생각하며 답해 주세요."],"items":[{"sub":null,"stem":"스트레스가 오래 지속되면서 잠, 감정, 집중력, 몸의 상태 등에 변화가 나타나기 시작했습니다. 나는 보통 언제 내 상태를 알아차립니까?","opts":["일이 틀어지거나 감정이 크게 무너진 뒤에야 내가 한계에 있었다는 것을 알게 된다.","몸의 이상이 뚜렷해지거나 주변 사람이 걱정해야 내가 많이 지쳤다는 것을 실감한다.","작은 변화가 생기면 알아차리고, 스스로 조절하려고 한다.","평소에도 내 몸과 마음의 상태를 살피며 스트레스가 쌓이지 않도록 조절한다."]},{"sub":null,"stem":"내가 무엇을 필요로 하는지 알았습니다. 그런데 그것을 위해 다른 일이나 다른 사람의 요구를 잠시 내려놓아야 한다면, 나는 어떻게 합니까?","opts":["내 필요를 위해 도움을 요청하는 것이 미안하거나 불편하게 느껴진다.","공적인 일이나 더 중요한 일이 남아 있으면 내 필요를 뒤로 미룬다.","해야 할 일을 어느 정도 정리한 뒤, 가능한 시간에 나를 돌본다.","내 상태와 필요를 살피고 돌보는 일을 조정의 우선순위로 삼는다."]},{"sub":null,"stem":"누군가의 요구를 받아들이면 나의 회복이나 일정에 상당한 부담이 생기는 상황입니다. 그 요구가 가족이나 가까운 사람의 부탁일 수도 있고, 거절하기 어려운 직속 상관이나 공적 기관의 요구일 수도 있습니다. 나는 보통 어떻게 합니까?","opts":["상대의 요구가 우선이기 때문에 나는 당연히 그 요구에 맞춘다.","잠시 고민하지만 거절하기 어려워 결국 나를 희생하는 편이다.","상대의 요구가 중요하기 때문에 우선 받아들이고, 나의 필요는 나중에 돌본다.","상대의 요구와 내 상태를 함께 살피고, 내가 감당할 수 있는 범위에서 조정한다."]},{"sub":null,"stem":"스트레스가 커졌을 때, 피로를 푸는 루틴이 있다면 그것을 어떻게 사용합니까?","opts":["피로를 느껴도 무엇을 해야 할지 모르고 그냥 견디는 편이다.","피로를 풀어야 한다는 것은 알지만, 다른 일이 우선이라 미루는 편이다.","피곤할 때는 쉬고 싶지만, 상황에 따라 내가 할 수 있는 만큼 조절한다.","피로를 느끼면 즉시 더 누적되지 않도록 모든 일정을 조절할 수 있다."]},{"sub":null,"stem":"당신은 당신의 존재만으로도 충분히 사랑받고, 존경받을 수 있다고 생각하십니까?","parts":[{"label":"5-1","stem":"당신은 어떤 사람으로 기억되고 싶습니까?","opts":["큰일을 해낸 사람으로 기억되고 싶다.","사람들에게 큰 영향력을 끼친 사람으로 기억되고 싶다.","사람들에게 인정받고 존경받은 사람으로 기억되고 싶다.","가족과 사람들을 잘 돌본 사람으로 기억되고 싶다."]},{"label":"5-2","stem":"내가 가장 듣고 싶은 그런 말을 사람들이 해주지 않는다면, 나는 얼마나 마음이 흔들릴 것 같습니까?","opts":["견디기 어려울 것 같다. 그런 평가를 받지 못하면 내가 충분하지 않은 사람처럼 느껴질 것 같다.","사람들이 나를 그렇게 봐주지 않는다면 늘 패배감을 안고 살게 될 것 같다.","서운하고 마음에 남을 것 같다. 그래도 그것 때문에 나를 낮게 평가하지는 않을 것 같다.","조금 아쉽기는 하지만 괜찮다. 그런 평가를 받지 않아도 나 자신을 인정할 수 있다."]}]}]},{"id":"chet","label":"헤트","letter":"ח","qTitle":"헤트 · 돌봄의 능력","qSub":null,"intro":[],"items":[{"sub":null,"stem":"곤혹스러운 일을 겪을 때, 나는 내가 도움이 필요하다는 것을 잘 느끼지 못하고 상황을 해결하려 한다.","opts":["도움이 필요하다는 생각보다, 일단 상황부터 해결하려 한다.","힘들다는 것은 알지만, 도움을 받기보다 내가 해결해야 한다고 생각한다.","내가 도움이 필요하다는 것을 알아차리고도, 다른 사람에게 말하지 않고 혼자 견디는 편이다.","내가 도움이 필요하다는 것을 알아차리고, 필요한 도움을 요청한다."]},{"sub":null,"stem":"누군가 나를 도와주겠다고 합니다. 그런데 그 도움을 받으려면 내 약한 모습이나 어려운 상황을 보여주어야 합니다. 나는 보통 어떻게 합니까?","opts":["괜찮다고 하고, 내가 혼자 해결하려 한다.","도움을 받아야 한다는 것은 알지만, 내 상황을 자세히 말하지 않는다.","필요한 부분은 조심스럽게 도움을 요청한다.","내 상황을 솔직하게 나누고, 필요한 도움을 받아들인다."]},{"sub":null,"stem":"나를 이해하고 지지해 주는 사람이 있습니다. 그런데 지금은 혼자 감당하기 어려운 일이 생겼습니다. 나는 어떻게 합니까?","opts":["도움을 요청하기보다, 내가 어떻게든 해결해야 한다고 생각한다.","도움을 요청할 수 있지만, 실제로 부탁하면 거절당할까 봐 말하지 않는다.","도움을 요청하고 싶지만, 상대에게 부담을 주거나 관계가 불편해질까 봐 망설인다.","필요한 상황에서는 솔직하게 도움을 요청하고, 그 사람이 주는 도움을 받아들인다."]},{"sub":null,"stem":"지금 있는 환경이 나를 계속 지치게 하고 있습니다. 그곳을 떠나는 것까지는 아니더라도, 나를 보호하고 회복할 수 있는 환경을 새롭게 만들어야 한다면 나는 어떻게 합니까?","opts":["힘들어도 내가 적응해야 한다고 생각하며 그대로 견딘다.","환경을 바꾸고 싶다는 생각은 들지만, 현실적으로 어렵다고 생각하며 참고 지낸다.","내가 바꿀 수 있는 부분부터 찾아 공간이나 일정, 관계의 방식을 조정한다.","필요하다면 내가 머무는 환경 자체를 바꾸거나 옮겨서, 나를 돌보고 회복할 수 있는 장막을 새롭게 만든다."]},{"sub":null,"stem":"누군가가 나를 진심으로 돕고 돌봐주려고 합니다. 나는 그 도움을 어떻게 받아들입니까?","opts":["도움을 받는 것보다 내가 다른 사람을 돕는 것이 더 편하다.","고맙기는 하지만, 다른 사람의 도움을 받는 것이 불편하고 마음에 빚진 느낌이 든다.","필요한 도움이라면 받아들이려고 하지만, 마음을 완전히 내려놓기는 어렵다.","나를 돌봐주는 사람의 마음을 받아들이고, 그 도움을 편안하게 누리며 감사할 수 있다."]}]},{"id":"gimel","label":"기멜","letter":"ג","qTitle":"기멜 · 분리","qSub":null,"intro":[],"items":[{"sub":null,"stem":"한동안 내가 맡은 일이 없거나, 사람들이 나를 필요로 하지 않는 상황이 계속된다면 나는 어떻게 느낄 것 같습니까?","opts":["내가 쓸모없는 사람이 된 것 같아 불안하고, 무엇이라도 찾아서 해야 할 것 같다.","마음이 허전하고 불안해져서, 내가 필요한 사람이라는 것을 보여주고 싶을 것 같다.","처음에는 마음이 불편하겠지만, 내가 해야 할 일이 있는지 차분히 살펴볼 수 있을 것 같다.","맡은 일이 없더라도 나의 존재나 가치를 의심하지 않고, 지금 내게 필요한 것이 무엇인지 바라볼 수 있을 것 같다."]},{"sub":null,"stem":"사역에서 내가 기대한 만큼 결과가 나오지 않고, 사람들이 내 수고를 알아주지도 않습니다. 그럴 때 나는 어떻게 합니까?","opts":["더 열심히 해서라도 결과를 만들어 내고, 내가 필요한 사람이라는 것을 보여주려 한다.","인정받지 못한 것이 마음에 남아, 내가 더 해야 할 일을 찾아 나선다.","속상하고 아쉽지만, 내가 할 수 있는 것과 다른 사람의 몫을 구별해서 바라보려고 한다.","결과나 인정과 관계없이, 내가 맡아야 할 몫에 집중할 수 있다."]},{"sub":null,"stem":"내가 맡은 일이 잘되지 않아 다른 사람에게 도움을 받거나 일부를 맡겨야 하는 상황입니다. 나는 보통 어떻게 합니까?","opts":["내가 직접 해야 마음이 놓이고, 결국 내가 다시 맡게 된다.","다른 사람이 해낼 수 있을지 걱정되어 내가 더 많이 확인하고 개입한다.","내가 맡아야 할 부분과 다른 사람이 맡을 부분을 나누어 보려고 한다.","다른 사람의 몫을 믿고 맡기며, 내가 책임져야 할 부분에 집중할 수 있다."]},{"sub":null,"stem":"누군가가 “이 일은 꼭 당신이 해야 합니다”라고 말합니다. 하지만 지금의 나에게는 꼭 필요한 일이 아닌 것 같습니다. 나는 어떻게 합니까?","opts":["나를 필요로 한다는 생각이 들어, 힘들어도 결국 그 일을 맡는다.","거절하면 나를 필요로 하지 않는 사람처럼 느껴질까 봐 쉽게 거절하지 못한다.","그 일이 정말 내가 맡아야 할 일인지, 내가 원하는 일인지 생각해 본다.","사명과 나의 존재를 증명하고 싶은 마음을 구별해서, 내가 맡을 일과 내려놓을 일을 선택할 수 있다."]},{"sub":null,"stem":"내가 감당해야 할 사명과, 내가 인정받거나 필요한 사람이 되고 싶은 마음을 구별해서 바라볼 수 있다.","opts":["두 마음을 구별하기 어렵고, 내가 필요한 사람이라는 느낌이 있어야 사역에 힘이 난다.","내가 인정받고 싶은 마음이 사명 안에 섞여 있다는 것을 알지만, 분리하기가 어렵다.","두 마음이 섞여 있을 수 있음을 인정하고, 어느 쪽이 나를 움직이고 있는지 살펴볼 수 있다.","내가 필요한 사람으로 인정받는 것과 관계없이, 내가 감당해야 할 사명에 집중할 수 있다."]}]},{"id":"zayin","label":"자인","letter":"ז","qTitle":"자인(Zayin) · 연결","qSub":"나의 취약성을 받아들이고, 그것을 다시 나와 연결할 수 있는가","intro":["자인의 검은 무엇이 필요한 것인지 분별하고, 더 이상 필요하지 않은 것을 잘라내는 힘입니다. 그러나 자신의 취약성이 건드려지면 이 검이 방어를 위해 사용될 수 있습니다. 상대의 잘못을 찾아내거나, 사람을 내 편과 네 편으로 나누거나, 관계를 끊어내는 방식으로 나타날 수 있습니다.","다음 질문은 갈등의 옳고 그름보다, 무엇을 분별하고 무엇을 내려놓으며, 그 안에서 무엇을 성찰할 수 있는지를 살펴보기 위한 것입니다."],"items":[{"sub":null,"stem":"사역에서 여러 사람의 요구가 한꺼번에 들어와 모두 들어주기 어려운 상황입니다. 나는 어떻게 합니까?","opts":["모두가 중요하다고 생각해서, 결국 내가 더 감당하려고 한다.","누군가의 요구를 거절하면 문제가 생길 것 같아 쉽게 내려놓지 못한다.","지금 내가 감당해야 할 것과 내려놓아도 되는 것을 구별해 본다.","꼭 필요한 것과 그렇지 않은 것을 분별하고, 필요한 것에 집중한다."]},{"sub":null,"stem":"공동체 안에서 나의 약점이나 부족한 부분을 자꾸 지적하는 사람이 있습니다. 그 사람을 대할 때 나는 어떻게 반응하는 편입니까?","opts":["그 사람의 말이 틀렸다고 생각하고, 그 사람의 잘못이나 약점을 찾아 반박하고 싶어진다.","그 사람의 말에 상처를 받고, 더 이상 내 약한 모습을 보이지 않으려고 마음을 닫는다.","불편하고 상처가 되지만, 그 말 속에 내가 돌아볼 부분이 있는지도 살펴본다.","불편한 마음을 인정하면서도, 그 말에서 받아들일 부분과 받아들이지 않아도 될 부분을 분별할 수 있다."]},{"sub":null,"stem":"공동체 안에서 의견이 크게 부딪히는 상황이 생겼습니다. 서로 자기 입장이 옳다고 주장하고 있습니다. 나는 어떻게 합니까?","opts":["내 입장이 옳다는 것을 증명하고 상대의 잘못을 밝혀내려고 한다.","나와 생각이 다른 사람과는 더 이상 함께하기 어렵다고 느낀다.","서로의 입장을 살펴보면서 무엇 때문에 의견이 달라졌는지 이해하려고 한다.","서로 다른 입장을 인정하면서도, 지금 우리가 함께 지켜야 할 본질이 무엇인지 분별한다."]},{"sub":null,"stem":"내가 싫어하거나 불편하게 느끼는 사람을 보면서, 그 사람에게서 내가 싫어하는 모습이 나에게도 있을 수 있다는 생각을 해본 적이 있습니까?","opts":["그런 생각은 하지 않는다. 그 사람의 문제는 그 사람의 문제라고 생각한다.","그런 생각이 들어도 인정하기 싫다. 나는 그 사람과 다르다고 생각한다.","가끔 나에게도 비슷한 모습이 있을 수 있겠다는 생각을 해본다.","인정하기 싫은 모습이라도 내 안에 있을 수 있음을 받아들이고, 그것을 통해 나 자신을 돌아볼 수 있다."]},{"sub":null,"stem":"사역에서 억울하거나 이해하기 어려운 일이 생겼습니다. 내가 잘못한 것이 분명하지 않은 상황에서, 나는 그 일을 어떻게 바라보는 편입니까?","opts":["내가 잘못한 것이 아니라면, 누가 잘못했는지를 밝히고 그 일을 바로잡아야 한다고 생각한다.","내가 잘못한 것이 아니라는 것을 확인하는 데 마음이 머물고, 억울한 마음이 쉽게 가라앉지 않는다.","내가 잘못한 것이 아니더라도, 이 일을 통해 내가 돌아보거나 배워야 할 것이 있는지 생각해 본다.","눈에 보이는 원인이나 잘잘못만으로 판단하기보다, 이 일이 나에게 무엇을 깨닫게 하려는 것인지 다른 가능성까지 열어 두고 바라본다."]}]},{"id":"tet","label":"테트","letter":"ט","qTitle":"테트(Tet) · 부패","qSub":"아직 익지 않은 것을 서둘러 완성하려 하지 않는가","intro":["테트의 시간은 내가 이미 충분히 준비되었다고 생각하지만, 아직 시간이 필요한 때입니다.","내가 가진 능력과 자격을 인정받고 싶어 하고, 뜻대로 되지 않는 현실을 견디기보다 밖에서 이유를 찾게 됩니다.","그러나 이 시간은 아무것도 하지 않는 시간이 아니라, 아직 드러나지 않은 내면이 훈습되고 성숙해지는 시간입니다."],"items":[{"sub":null,"stem":"내가 충분히 준비되었고 이만한 자격이 있다고 생각하는데도, 내가 있어야 할 자리나 기회가 주어지지 않을 때 나는 어떻게 반응하는 편입니까?","opts":["내가 마땅히 받아야 할 것을 받지 못하고 있다고 생각하며, 사람이나 상황에 대한 원망이 커진다.","내가 왜 인정받지 못하는지 이유를 찾으며, 나를 알아주지 않는 사람이나 상황을 바꾸고 싶어진다.","아직 내가 알지 못하는 이유가 있을 수 있다고 생각하며, 내가 더 준비해야 할 것이 무엇인지 돌아본다.","내가 자격을 갖추었다는 생각과 별개로, 아직 내 안에서 더 자라야 할 것이 무엇인지 돌아볼 수 있다."]},{"sub":null,"stem":"아무리 애써도 내가 원하는 변화가 일어나지 않고, 같은 상황이 반복되는 시간이 길어질 때 나는 어떻게 합니까?","opts":["더 이상 기다릴 수 없다고 생각하고, 어떻게든 내가 직접 결과를 만들어내려고 한다.","왜 이렇게까지 오래 막혀 있는지 답답하고, 상황이나 사람을 바꾸어야 한다고 생각한다.","내가 원하는 때에 변화가 일어나지 않을 수도 있음을 인정하고, 지금 내가 할 수 있는 것과 기다려야 할 것을 구별해 보려고 한다.","변화가 더디게 진행되는 시간을 견디면서, 아직 드러나지 않은 내 안의 변화와 성숙을 돌아볼 수 있다."]},{"sub":null,"stem":"내가 가진 생각이나 믿음 안에 서로 모순되는 부분이 있다는 것을 인정할 수 있습니까?","opts":["내가 옳다고 믿는 생각과 맞지 않는 것은 받아들이기 어렵다.","내 생각 안에 모순이 있다는 것을 알아도, 내가 믿어온 것을 쉽게 내려놓지 못한다.","서로 맞지 않는 부분이 있을 수 있음을 인정하고, 그 이유를 살펴보려고 한다.","내 안의 모순을 서둘러 해결하려 하지 않고, 그 모순을 통해 내가 무엇을 배우고 더 자라야 하는지 돌아볼 수 있다."]},{"sub":null,"stem":"내가 믿고 있던 것과 실제로 경험하는 현실 사이에 큰 간격이 생겼을 때, 나는 어떻게 반응하는 편입니까?","opts":["현실이 잘못되었다고 생각하며, 내가 믿어온 것을 더 강하게 붙잡는다.","내가 무엇을 잘못 생각했는지 혼란스럽고, 이전의 방식으로 돌아가고 싶어진다.","내가 믿어온 것과 현실 사이에 차이가 생겼음을 인정하고, 그 차이를 바라보려고 한다.","당장 결론을 내리기보다, 그 간격을 통해 내가 무엇을 돌아보려고 한다."]},{"sub":null,"stem":"내가 되어야 한다고 생각하는 모습을 다른 사람에게 증명하지 못한다면, 나는 어떤 사람이라고 느낄 것 같습니까?","opts":["내가 가진 능력이나 가치를 증명하지 못하면, 나는 가치 없는 사람처럼 느껴질 것 같다.","내가 아무리 노력해도 사람들이 알아주지 않는다면, 내가 중요한 사람이 아니라는 생각이 들 것 같다.","다른 사람의 인정이나 주목을 받지 못하더라도, 그것이 나의 가치를 결정짓는 절대적 조건은 아니라고 생각한다.","내가 증명해야 할 모습이나 사람들의 인정이 없어도, 지금의 나를 있는 그대로 바라볼 수 있다."]}]},{"id":"yod","label":"요드","letter":"י","qTitle":"요드(Yod) · 발효","qSub":null,"intro":["요드의 핵심은 사건 자체가 달라지는 것이 아니라, 시간이 지나면서 그 사건을 바라보는 의미와 해석이 변화하는가에 있습니다."],"items":[{"sub":null,"stem":"힘든 일을 겪을 때, 나는 어떻게 대처하는 편입니까?","opts":["시간이 지나기를 기다리기보다, 일의 원인을 찾아 빨리 결론을 내리고 싶어진다.","답을 찾지 못한 상태가 불편해서, 내가 이해할 수 있는 이유를 찾아보려고 한다.","당장 결론을 내리기보다, 시간이 지나면서 상황을 조금 더 바라볼 수 있다.","아직 의미를 알 수 없는 일이라도 서둘러 결론 내리지 않고, 시간이 지나며 달라질 가능성을 열어둘 수 있다."]},{"sub":null,"stem":"처음에는 한 가지 이유 때문이라고 생각했던 일이, 시간이 지나면서 다른 이유나 의미로 보이기 시작한 적이 있습니까?","opts":["처음에 생각한 이유가 맞다고 생각하며, 다른 가능성은 거의 생각하지 않는다.","다른 가능성이 있을 수도 있다고 생각하지만, 처음의 생각을 쉽게 바꾸지는 못한다.","시간이 지나면서 처음과 다른 가능성을 생각해 보게 된 적이 있다.","처음에는 보이지 않았던 다른 의미가 있을 수 있다는 것을 받아들이고, 새로운 관점에서 그 일을 돌아볼 수 있다."]},{"sub":null,"stem":"어느 날, 덮어두었던 문제가 갑자기 다르게 이해되거나 새로운 방향이 보이기 시작한 경험이 있습니까?","opts":["그런 경험이 거의 없다. 시간이 지나도 같은 생각과 해석에 머무는 편이다.","지나고 나서 생각이 달라진 적은 있지만, 그 의미를 쉽게 받아들이지는 못한다.","어느 순간 이전과 다른 생각이나 이해가 자연스럽게 떠오른 경험이 있다.","오랫동안 답을 찾으려고 애쓰지 않았는데도, 어느 순간 새로운 이해나 방향이 자연스럽게 보이기 시작한 경험이 있다."]},{"sub":null,"stem":"시간이 충분히 지난 뒤, 예전에는 실패나 손해라고 생각했던 일이 다른 의미로 보이기 시작한 적이 있습니까?","opts":["여전히 그 일은 실패나 손해였다고 생각한다.","그 일에 다른 의미가 있을 수도 있다고 생각하지만, 쉽게 받아들이기는 어렵다.","시간이 지나면서 예전과는 다른 의미로 그 일을 바라보게 된 적이 있다.","당시에는 이해할 수 없었던 일이 시간이 지난 뒤 전혀 다른 의미로 보일 수 있다는 것을 돌아볼 수 있다."]},{"sub":null,"stem":"지금까지 당신이 경험한 고난의 시간은 당신에게 어떤 의미로 남아 있습니까?","opts":["의미 없이 지나간 시간이며, 누군가의 방해나 잘못 때문에 겪은 억울한 시간이라고 생각한다.","힘들고 아까운 시간이었지만, 그 안에서 내가 배운 것도 있었던 것 같다.","당시에는 이해하지 못했지만, 지금 돌아보면 그 시간이 나를 변화시키거나 새로운 방향을 찾게 한 의미가 있었다고 생각한다.","당시에는 이해하지 못했던 의미까지 돌아보면서, 그 시간이 지금의 나를 어떻게 만들었고 앞으로 어떻게 살아갈 것인지까지 연결해서 바라볼 수 있다."]}]},{"id":"shin","label":"신","letter":"ש","qTitle":"Shin · 증류","qSub":"끝까지 남아 있는 마지막 찌꺼기","intro":["Shin은 많은 것을 걷어낸 뒤에도 끝까지 남아 있는 것이 무엇인지 살펴보는 과정입니다. 무엇이 중요한지를 묻는 것이 아니라, 하나씩 내려놓았을 때에도 끝까지 붙들고 있는 것이 무엇인지 살펴봅니다."],"items":[{"sub":"내가 살아온 시간과 수고를 내려놓는다면","stem":"오랫동안 쌓아온 사역의 시간과 수고가 아무런 결과나 인정으로 남지 않는다고 생각해 보십시오. 나는 그것을 얼마나 내려놓을 수 있습니까?","opts":["내가 살아온 시간과 수고가 헛된 것이 되는 것 같아 받아들이기 어렵다.","내가 들인 시간과 수고가 인정받지 못한 것이 오래 마음에 남는다.","내가 들인 시간과 수고를 인정받고 싶은 마음을 알아차리고, 그것이 정말 필요한 것인지 돌아볼 수 있다.","내가 살아온 시간과 수고가 어떤 결과로 인정받지 않더라도, 그것이 내 삶의 가치를 결정하는 것은 아니라고 생각할 수 있다."]},{"sub":"내가 인정받지 못한다면","stem":"내가 오랫동안 해온 일이나 수고에 대해 인정받지 못할 때, 내가 마땅히 받아야 한다고 생각하는 명예나 보상, 자리를 내려놓을 수 있습니까?","opts":["내가 마땅히 받아야 할 명예나 보상, 자리를 빼앗긴 것처럼 느껴지고 그것을 되찾고 싶어진다.","아쉬움이 오래 남고, 내가 마땅히 받아야 할 명예나 보상, 자리가 무엇인지 계속 생각하게 된다.","인정받고 싶은 마음이 있다는 것을 알아차리고, 내가 원하는 명예나 보상이 정말 필요한 것인지 돌아볼 수 있다.","명예나 보상, 자리를 인정받지 못하더라도 그것이 나의 가치나 삶의 의미를 결정하는 것은 아니라고 생각할 수 있다."]},{"sub":"내가 더 이상 필요한 사람이 아니라면","stem":"사람들이 나를 찾지 않고, 내가 맡던 역할을 다른 사람이 대신하게 되어 ‘내가 꼭 필요한 사람’이라는 자리를 내려놓아야 한다면, 나는 어떻게 할 것 같습니까?","opts":["내가 필요한 사람이라는 것을 증명하기 위해서라도 다시 역할을 찾아야 한다고 생각한다.","나를 필요로 하지 않는다는 사실이 마음에 오래 남고, 다시 필요한 사람이 되고 싶어진다.","필요한 사람이 되고 싶은 마음을 알아차리고, 그것이 정말 나에게 필요한 것인지 돌아볼 수 있다.","내가 필요한 사람이 아니어도 나의 가치나 존재가 달라지는 것은 아니라고 생각할 수 있다."]},{"sub":"내가 옳지 않을 수도 있다면","stem":"내가 오랫동안 옳다고 믿어온 생각이나 판단이 틀렸을 수도 있다는 것을 받아들이고, 내가 옳다는 것을 내려놓아야 한다면 나는 어떻게 할 것 같습니까?","opts":["내가 옳다는 것을 끝까지 증명하고 싶고, 내가 틀렸다는 것은 받아들이기 어렵다.","내가 틀렸을 가능성이 있다는 것이 마음에 오래 남고, 내가 옳았던 이유를 계속 설명하고 싶어진다.","내가 옳다고 믿고 싶은 마음을 알아차리고, 내가 놓치고 있는 것이 무엇인지 돌아볼 수 있다.","내가 옳다는 것을 내려놓더라도 그것이 나의 가치나 존재를 흔드는 것은 아니라고 생각할 수 있다."]},{"sub":"마지막까지 붙들고 있는 것은 무엇인가","stem":"명예와 보상, 자리, 필요한 사람이 되는 것, 내가 옳다는 것까지 하나씩 내려놓았다고 생각해 보십시오. 그럼에도 불구하고 마지막까지 이것만은 놓을 수 없다고 느껴지는 것이 있다면, 나는 왜 그것을 붙들고 있는 것 같습니까?","opts":["그것을 놓으면 지금까지 내가 살아온 것이 모두 헛된 것처럼 여겨질 것이다. 그래서 나는 포기할 수 없다.","그것을 놓으면 내가 누구인지가 흔들리는 것 같아서 쉽게 놓지 못하겠다.","내가 그것을 붙잡고 있는 이유가 무엇인지 알아차리고, 그 이유가 내 삶에서 어떤 의미를 가지고 있는지 돌아볼 수 있다.","그것을 붙잡고 있는 이유를 바라보면서, 그것을 붙들고 있는 것과 나 자신의 가치와 존재를 구별해서 생각할 수 있다."]}]},{"id":"zayin2","label":"자인 ②","letter":"ז","qTitle":"Ⅱ. Zayin · 두 번째 증류: 본질 추출","qSub":"핵심: Doing이 빠진 자리에서 Being으로 남는 나를 바라볼 수 있는가","intro":["두 번째 자인은 한 번 더 덜어내는 과정입니다.","내가 해온 일, 이루고자 했던 목표, 오랫동안 붙들어 온 프로젝트와 한 시즌을 나 자신과 구별해 봅니다.","그리고 그것들을 하나씩 내려놓았을 때에도 남아 있는 나를 바라봅니다."],"items":[{"sub":"내가 해온 일과 나 자신","stem":"오랫동안 해온 일이나 맡아온 프로젝트를 더 이상 하지 않게 된다면, 나는 그것과 나 자신을 얼마나 구별해서 바라볼 수 있습니까?","opts":["그 일을 하지 못하면 내가 누구인지도 달라지는 것처럼 느껴질 것이다.","그 일을 내려놓으면 지금까지 내가 해온 것이 무엇이었는지 허전하고 혼란스러울 것 같다.","그 일과 나 자신이 같지는 않다는 것을 알아차리기 시작하고, 그 일과 나를 분리하기 시작할 것이다.","내가 해온 일과 나 자신을 구별해서 바라보고, 그 일을 내려놓은 뒤에도 내 안에 남아 있는 것을 돌아볼 수 있다."]},{"sub":"목표와 나 자신","stem":"오랫동안 바라보던 목표를 이루지 못하거나, 이제는 그 목표를 내려놓아야 한다면 나는 그것과 나 자신을 얼마나 구별해서 바라볼 수 있습니까?","opts":["목표를 이루지 못하면 내가 실패한 사람처럼 느껴질 것이다.","목표를 내려놓으면 지금까지의 노력까지 모두 의미가 없어진 것처럼 느껴질 것이다.","목표를 이루는 것과 나 자신의 가치를 구별하기 시작하고, 그 목표가 나에게 무엇을 의미했는지 돌아보기 시작할 것이다.","목표를 이루었는지와 관계없이, 그 목표를 통해 내가 무엇을 배우고 무엇이 남았는지 돌아볼 수 있다."]},{"sub":"프로젝트의 결과와 나 자신","stem":"오랫동안 준비한 프로젝트가 끝났는데 기대했던 결과를 얻지 못했다면, 나는 그 결과와 나 자신을 얼마나 구별해서 바라볼 수 있습니까?","opts":["결과가 좋지 않으면 내가 부족한 사람이라는 생각이 들 것이다.","결과가 기대와 다르면 내가 해온 노력까지 실패한 것처럼 느껴질 것이다.","결과와 나 자신이 같지는 않다는 것을 알아차리기 시작하고, 내가 부족했던 부분과 결과를 구별해서 바라보기 시작할 것이다.","프로젝트의 성패와 나 자신을 구별해서 바라보고, 그 과정을 통해 내 안에 남은 변화와 의미가 무엇인지 돌아볼 수 있다."]},{"sub":"한 시즌의 끝과 나 자신","stem":"오랫동안 이어온 한 시기가 끝나고, 그동안 해온 일이나 익숙했던 자리를 내려놓아야 한다면 나는 어떻게 바라볼 것 같습니까?","opts":["그 시기가 끝나는 것이 두렵고, 어떻게든 지금의 것을 계속 붙들고 싶을 것이다.","다음에 무엇을 해야 할지 모르겠고, 지금까지의 것을 놓는 것이 아쉽고 허전할 것 같다.","한 시기가 끝난다는 것을 받아들이기 시작하고, 그 시간 동안 내 안에 무엇이 남았는지 돌아보기 시작할 것이다.","그 시기의 끝을 상실로만 바라보지 않고, 그 시간을 통해 달라진 나와 앞으로의 방향을 돌아볼 수 있다."]},{"sub":"Doing이 사라진 자리의 나","stem":"지금까지 붙들어 온 일, 목표, 프로젝트와 한 시즌을 하나씩 내려놓았다고 생각해 보십시오. 그때 아무것도 하지 않는 나를 나는 어떻게 바라볼 것 같습니까?","opts":["아무것도 하지 않고 있다면 내가 쓸모없는 사람처럼 느껴질 것이다.","아무것도 하지 않는 나를 바라보면, 내가 누구인지 증명하기 어려워지고 다시 무엇인가를 해야 한다는 생각이 들 것이다.","아무것도 하지 않아도 그대로 괜찮은 나를 받아들이기 시작할 것 같다.","아무것도 하지 않아도, 그냥 존재하는 내가 좋아지기 시작할 것 같다."]}]},{"id":"alef","label":"알레프","letter":"א","qTitle":"알레프 · 응고: 이것이 나다","qSub":null,"intro":["앞의 과정에서 우리는 필요하지 않은 것을 덜어내고, 끝까지 남아 있는 것을 살펴보았습니다.","또한 그렇게 남은 것들을 서로 대립시키지 않고 함께 가지고 살아갈 수 있는지도 살펴보았습니다.","이제는 그 과정을 통해 알아진 ‘이것이 나다’라는 본질을 바라봅니다.","알레프의 응고는 무엇인가를 더 이루어내는 과정이 아니라, 여러 경험과 관계, 역할과 기대를 지나면서 결국 남은 나를 하나로 받아들이는 과정입니다."],"items":[{"sub":"내가 옳다고 생각하는 것과 상대를 받아들이는 것이 충돌할 때","stem":"내가 옳다고 생각하는 것과 상대를 받아들이는 것이 충돌하는 상황에서, 나는 어떻게 할 것 같습니까?","opts":["내가 옳다고 생각하는 것이 맞다고 확신하며, 상대의 입장은 고려하지 않을 것 같다.","상대의 입장도 생각해야 한다는 것은 알지만, 내가 옳다고 생각하는 것을 내려놓기는 어려울 것 같다.","내가 옳다고 생각하는 부분과 상대의 입장을 함께 살펴보려는 태도로 바뀌고 있는 것 같다.","내가 옳다고 생각하는 것을 분별하면서도 상대의 입장을 함께 바라보고, 그 안에서 무엇이 본질적인지 돌아볼 수 있을 것 같다."]},{"sub":"나를 지키면서 상대를 받아들일 때","stem":"내가 나 자신을 지켜야 할 상황에서, 동시에 상대방을 배려해야 한다면 나는 어떻게 할 것 같습니까?","opts":["상대를 배려하는 것보다 내 기준과 필요를 지키는 것이 먼저라고 생각할 것 같다.","상대를 배려해야 한다는 것은 알지만, 그렇게 하다 보면 내 자신을 지키기 어려울 것 같아 망설일 것 같다.","나를 지키는 것과 상대를 배려하는 것을 함께 생각해 보려는 태도로 바뀌고 있는 것 같다.","나를 지키는 것과 상대를 배려하는 것을 서로 반대되는 것으로 보지 않고, 두 가지를 함께 가지고 있을 수 있는지 돌아볼 수 있을 것 같다."]},{"sub":"내가 할 수 있는 것과 내려놓아야 할 것을 구별할 때","stem":"내가 할 수 있는 일과 내가 통제할 수 없는 일이 함께 있는 상황에서, 나는 어떻게 할 것 같습니까?","opts":["내가 원하는 결과를 만들기 위해, 통제할 수 없는 부분까지 내가 움직이려고 할 것 같다.","내가 모든 것을 통제할 수 없다는 것은 알지만, 결과를 내려놓기는 어려울 것 같다.","내가 할 수 있는 일과 내가 내려놓아야 할 일을 함께 구별해 보려는 태도로 바뀌고 있는 것 같다.","내가 할 몫은 충실히 하면서도, 내가 통제할 수 없는 부분은 내려놓고 바라볼 수 있을 것 같다."]},{"sub":"내가 누구인지 역할과 구별할 때","stem":"내가 해온 일, 맡고 있던 역할, 다른 사람의 인정까지 모두 내려놓았다고 생각해 보십시오. 그때 남아 있는 나를 나는 어떻게 바라볼 것 같습니까?","opts":["내가 해온 일이나 역할이 사라지면 내가 누구인지 알기 어려울 것 같다.","그것들이 없어도 내가 있다는 것은 알지만, 여전히 내가 누구인지 설명하기 어려울 것 같다.","내가 해온 일과 나 자신이 같지는 않다는 것을 알아차리고, 그 일들 너머의 나를 바라보기 시작할 것 같다.","내가 무엇을 하거나 어떤 자리에 있느냐와 관계없이, 그 모든 것 너머에 있는 나 자신을 바라보고 받아들일 수 있을 것 같다."]},{"sub":"이것이 나다","stem":"지금까지의 과정을 지나면서, 다른 사람이 원하는 나도 아니고 내가 증명하려 했던 나도 아닌 ‘이것이 나다’라고 말할 수 있는 것이 있다면, 나는 그것을 어떻게 받아들일 것 같습니까?","opts":["아직은 내가 누구인지 분명하게 말하기 어렵고, 다른 사람이 나를 어떻게 보는지가 더 중요하게 느껴질 것 같다.","내가 어떤 사람인지 알고 싶지만, 역할이나 관계, 성취와 나 자신을 완전히 구별하기는 어려울 것 같다.","내가 살아온 경험과 내려놓은 것들을 돌아보면서, 그 안에서 변하지 않고 남아 있는 나를 바라보기 시작할 것 같다.","내가 무엇을 하거나 어떤 자리에 있든 관계없이, 그 모든 것을 지나 남은 ‘이것이 나다’라는 본질을 받아들이고 그것으로 존재할 수 있다."]}]},{"id":"chet2","label":"헤트 ②","letter":"ח","qTitle":"헤트(ח) · 두 번째 응고","qSub":"적화된 삶","intro":["앞의 과정에서 우리는 필요하지 않은 것을 덜어내고, 끝까지 남아 있는 것을 살펴보았습니다.","또한 그렇게 남은 것들을 서로 대립시키지 않고 함께 가지고 살아갈 수 있는지도 살펴보았습니다.","이제는 그 과정을 통해 알아진 “이것이 나다”라는 본질이 삶 속에 안정적으로 자리 잡고 있는지를 살펴봅니다.","적화된 삶은 특별한 성취를 이루거나 더 많은 일을 해내는 삶을 뜻하지 않습니다. 자신이 누구인지 알아가고, 그 알아진 나를 잃지 않으며, 무엇을 하거나 하지 않더라도 그 존재를 살아낼 수 있는 상태를 뜻합니다."],"items":[{"sub":"알아진 나를 잃지 않는가","stem":"지금까지의 과정을 통해 ‘이것이 나다’라고 알아진 것이 있다면, 다른 사람이 그것을 인정해 주지 않거나 특별한 역할을 맡지 않아도 나는 나 자신으로 있을 수 있습니까?","opts":["내가 알아진 나를 다른 사람이 인정해 주지 않거나 특별한 역할이 없다면, 내가 누구인지 다시 흔들릴 것 같다.","내가 누구인지 알고는 있지만, 인정받지 못하거나 역할이 사라지면 그 모습을 유지하기 어려울 것 같다.","다른 사람의 인정이나 역할과 관계없이 내가 알아진 나를 바라보려는 태도로 조금씩 바뀌고 있다.","다른 사람의 인정이나 역할이 없어도 내가 알아진 나를 잃지 않고, 그 존재 그대로 있을 수 있다."]},{"sub":"본질과 현실을 함께 품는가","stem":"내가 중요하게 여기는 가치와 현실적인 필요가 서로 충돌하는 상황이 생긴다면, 나는 어떻게 할 것 같습니까?","opts":["현실적인 필요와 내가 중요하게 여기는 가치 중 하나를 선택해야 한다고 생각하고, 결국 한쪽을 포기하게 될 것 같다.","내가 중요하게 여기는 것을 지키고 싶지만, 현실적인 필요 앞에서는 두 가지를 함께 가지고 있기 어렵다고 느낄 것 같다.","내가 중요하게 여기는 것과 현실적인 필요를 함께 살펴보면서, 두 가지를 조화시킬 수 있는 방향을 찾아가기 시작할 것 같다.","현실을 외면하지 않으면서도 내가 중요하게 여기는 것을 잃지 않고, 그 안에서 나에게 맞는 방향을 선택할 수 있다."]},{"sub":"달라진 나로 존재할 수 있는가","stem":"내가 예전과 달라졌다는 것을 알게 되었는데도, 주변에서는 여전히 예전의 나를 기대한다면 나는 어떻게 할 것 같습니까?","opts":["주변의 기대에 맞추다 보면 다시 예전의 나로 돌아갈 것 같다.","내가 달라졌다는 것은 알지만, 예전의 관계와 기대에서 벗어나기는 어려울 것 같다.","예전의 나와 지금의 나가 다를 수 있음을 받아들이고, 달라진 나를 살아가려 하기 시작할 것 같다.","예전의 나를 부정하지 않으면서도, 지금 알아진 나를 잃지 않고 그 모습으로 있을 수 있다."]},{"sub":"존재하는 나를 받아들일 수 있는가","stem":"아무것도 증명하지 않아도 되고, 특별한 역할도 맡지 않아도 되는 자리에서 나는 나 자신을 어떻게 느낄 것 같습니까?","opts":["아무것도 증명하지 못하고 있다면, 내가 누구인지조차 불안하게 느껴질 것 같다.","특별한 역할이나 성취가 없어도 된다는 것은 알지만, 그렇게 있는 나를 편안하게 받아들이기는 어려울 것 같다.","무엇을 하지 않아도 존재하는 나를 받아들이기 시작하고, 그 안에서 나 자신을 바라보기 시작할 것 같다.","아무것도 증명하지 않아도 되는 자리에서, 무엇을 하는 나가 아니라 존재하는 나를 편안하게 받아들일 수 있다."]},{"sub":"알아진 나를 살아낼 수 있는가","stem":"지금까지의 과정을 통해 ‘이것이 나다’라고 알아진 것이 있다면, 나는 그것을 앞으로의 삶에서 어떻게 살아가고 싶습니까?","opts":["내가 알아진 나를 실제 삶에서 살아가는 것은 어렵고, 다시 익숙한 모습으로 돌아가고 싶을 것 같다.","내가 누구인지 알아진 것은 있지만, 현실에서는 여전히 다른 사람의 기대와 상황에 맞추게 될 것 같다.","알아진 나를 일상의 선택과 관계 속에서 조금씩 살아내기 시작할 것 같다.","내가 알아진 나를 잃지 않고, 특별한 일을 증명하지 않아도 그 본질을 지닌 채 살아갈 수 있다."]}]}]}</script>
+<script>(function () {
+  'use strict';
+
+  var API_URL = 'https://script.google.com/macros/s/AKfycbwKOZQP4Yg4UKP1c1xLVVt5Kiyom6S3uLCMejyUSGVXHxE0DUQvB5P5eiIDVPclRlGIGA/exec';
+  var DEMO = false;
+
+  var DATA = JSON.parse(document.getElementById('data').textContent);
+  var STAGES = DATA.stages;
+  var app = document.getElementById('app');
+  var CIRC = ['\u2460', '\u2461', '\u2462', '\u2463'];
+  var NUMW = ['', '한', '두', '세', '네', '다섯', '여섯', '일곱', '여덟', '아홉', '열', '열한', '열두'];
+  var LS = 'mobius-selfcheck-v2-';
+
+  var state = {
+    view: 'login',        // login | intro | quiz | result
+    code: '',             // normalized access code (10 chars)
+    num: '',
+    name: '',
+    nameKnown: false,
+    a: {},
+    stage: 0,
+    result: null,
+    busy: false,
+    loginMsg: '',
+    introMsg: '',
+    copyText: '',
+    copyMsg: ''
+  };
+
+  /* ---------- helpers ---------- */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function normCode(raw) {
+    var c = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return /^\d{2}[A-Z0-9]{8}$/.test(c) ? c : '';
+  }
+  function lsGet(code) { try { var s = localStorage.getItem(LS + code); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+  function lsSet() { if (!state.code) return; try { localStorage.setItem(LS + state.code, JSON.stringify({ a: state.a, stage: state.stage })); } catch (e) {} }
+
+  function itemKeys(s, i) {
+    var it = STAGES[s].items[i];
+    if (it.parts) return it.parts.map(function (_, p) { return s + '.' + i + '.' + p; });
+    return [s + '.' + i];
+  }
+  function stageKeys(s) {
+    var out = [];
+    STAGES[s].items.forEach(function (_, i) { out = out.concat(itemKeys(s, i)); });
+    return out;
+  }
+  function stageDone(s) { return stageKeys(s).every(function (k) { return !!state.a[k]; }); }
+  function countAnswered() {
+    var n = 0;
+    STAGES.forEach(function (_, s) { stageKeys(s).forEach(function (k) { if (state.a[k]) n++; }); });
+    return n;
+  }
+  function firstIncompleteStage() {
+    for (var s = 0; s < STAGES.length; s++) if (!stageDone(s)) return s;
+    return STAGES.length - 1;
+  }
+  function el(id) { return document.getElementById(id); }
+  function setText(id, t) { var e = el(id); if (e) e.textContent = t; }
+
+  /* ---------- backend ---------- */
+  var Backend;
+  if (DEMO) {
+    var KEY = JSON.parse(document.getElementById('demokey').textContent);
+    var demoDb = {};
+    var demoScore = function (answers) {
+      return STAGES.map(function (_, s) {
+        var sum = 0, items = STAGES[s].items;
+        items.forEach(function (it, i) {
+          var ks = itemKeys(s, i), m = 0;
+          ks.forEach(function (k) { m += answers[k]; });
+          sum += m / ks.length;
+        });
+        var mean = sum / items.length;
+        return mean < 1.5 ? 1 : (mean < 2.5 ? 2 : (mean < 3.5 ? 3 : 4));
+      });
+    };
+    var demoResult = function (levels) {
+      return { stages: STAGES.map(function (st, s) {
+        var lv = levels[s], k = KEY[s], b = k.levels[lv - 1];
+        return { label: k.kTitle, level: lv, title: k.titles[lv - 1], now: b.n, task: b.k, next: b.x };
+      }) };
+    };
+    var wait = function (v) { return new Promise(function (r) { setTimeout(function () { r(v); }, 350); }); };
+    Backend = {
+      login: function (code) {
+        if (!/^0[1-9]DEMOTEST$/.test(code)) return wait({ ok: false, error: 'invalid' });
+        var u = demoDb[code] || (demoDb[code] = { name: '', status: '미시작', answers: {}, stage: 0, levels: null });
+        return wait({ ok: true, name: u.name, status: u.status, answers: u.answers, stage: u.stage,
+          result: u.status === '완료' ? demoResult(u.levels) : null });
+      },
+      save: function (code, answers, stage, name) {
+        var u = demoDb[code]; if (!u) return wait({ ok: false, error: 'invalid' });
+        if (u.status === '완료') return wait({ ok: false, error: 'locked' });
+        u.answers = JSON.parse(JSON.stringify(answers)); u.stage = stage; u.status = '진행중';
+        if (!u.name && name) u.name = name;
+        return wait({ ok: true });
+      },
+      submit: function (code, answers, name) {
+        var u = demoDb[code]; if (!u) return wait({ ok: false, error: 'invalid' });
+        if (u.status === '완료') return wait({ ok: false, error: 'locked' });
+        var missing = false;
+        STAGES.forEach(function (_, s) { stageKeys(s).forEach(function (k) { if (!answers[k]) missing = true; }); });
+        if (missing) return wait({ ok: false, error: 'incomplete' });
+        u.answers = JSON.parse(JSON.stringify(answers)); u.levels = demoScore(answers); u.status = '완료';
+        if (!u.name && name) u.name = name;
+        return wait({ ok: true, result: demoResult(u.levels) });
+      }
+    };
+  } else {
+    var post = function (payload) {
+      if (!API_URL) return Promise.resolve({ ok: false, error: 'noconfig' });
+      var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      var timer = ctl ? setTimeout(function () { ctl.abort(); }, 45000) : null;
+      return fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+        redirect: 'follow',
+        signal: ctl ? ctl.signal : undefined
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (timer) clearTimeout(timer);
+        return j;
+      }, function () {
+        if (timer) clearTimeout(timer);
+        return { ok: false, error: 'network' };
+      });
+    };
+    Backend = {
+      login: function (code) { return post({ action: 'login', code: code }); },
+      save: function (code, answers, stage, name) { return post({ action: 'save', code: code, answers: answers, stage: stage, name: name }); },
+      submit: function (code, answers, name) { return post({ action: 'submit', code: code, answers: answers, name: name }); }
+    };
+  }
+
+  /* ---------- figure-eight path with one node per stage ---------- */
+  function lemn(states, decor, label) {
+    var a = 150, n = STAGES.length, base = Math.PI / 2 + 0.3, r = 15, i;
+    var d = '';
+    for (i = 0; i <= 240; i++) {
+      var t = i / 240 * 2 * Math.PI, s = Math.sin(t), c = Math.cos(t), q = 1 + s * s;
+      d += (i ? 'L' : 'M') + (a * c / q).toFixed(1) + ' ' + (a * s * c / q).toFixed(1);
+    }
+    var svg = '<svg class="lem" viewBox="-176 -76 352 152" ' +
+      (decor ? 'aria-hidden="true"' : 'role="img" aria-label="' + esc(label || '') + '"') + '>' +
+      '<path d="' + d + '"/>';
+    for (i = 0; i < n; i++) {
+      var tt = base + i * 2 * Math.PI / n, ss = Math.sin(tt), cc = Math.cos(tt), qq = 1 + ss * ss;
+      var x = a * cc / qq, y = a * ss * cc / qq;
+      svg += '<g class="node ' + (states[i] || 'todo') + '" transform="translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ')">' +
+        '<title>' + esc(STAGES[i].label) + '</title><circle r="' + r + '"/>' +
+        '<text text-anchor="middle" dy="0.35em">' + STAGES[i].letter + '</text></g>';
+    }
+    return svg + '</svg>';
+  }
+  function fill(v) { var o = []; for (var i = 0; i < STAGES.length; i++) o.push(v); return o; }
+
+  /* ---------- text rendering ---------- */
+  function paras(arr) {
+    return (arr || []).map(function (p) {
+      return /^[\u201c\u2018].*[\u201d\u2019]$/.test(p) ? '<p class="say">' + esc(p) + '</p>' : '<p>' + esc(p) + '</p>';
+    }).join('');
+  }
+  function levelBody(r) {
+    return '<h4>지금 당신의 모습</h4>' + paras(r.now) +
+      '<h4>지금의 과제</h4>' + paras(r.task) +
+      '<h4>다음 단계</h4>' + paras(r.next);
+  }
+  function demoBar() {
+    return DEMO ? '<p class="demo">체험용 화면입니다. 실제로 저장되지 않으며, 접속번호는 01-DEMO-TEST 입니다.</p>' : '';
+  }
+  function fmtNum() { return state.num ? state.num + '번' : ''; }
+
+  /* ---------- views ---------- */
+  function viewLogin() {
+    var h = '<main class="wrap">' + demoBar() + '<header class="hero">' + lemn(fill('todo'), true) +
+      '<h1 id="focus" tabindex="-1">뫼비우스 반전 자기점검</h1>' +
+      '<p class="lede">' + NUMW[STAGES.length] + ' 개의 단계를 차례로 지나며 지금의 나를 살펴봅니다. 받으신 접속번호를 입력하면 시작합니다.</p></header>';
+    h += '<section class="card"><div class="codebox"><label for="code-in">접속번호</label>' +
+      '<div class="row"><input id="code-in" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="예: 07-K3F9-M2QX">' +
+      '<button type="button" class="btn" data-act="login">들어가기</button></div>' +
+      '<p class="msg" id="login-msg" role="status" aria-live="polite">' + esc(state.loginMsg) + '</p></div>' +
+      '<p class="small">입력한 답은 세미나 운영자가 볼 수 있도록 저장됩니다. 중간에 멈추어도 같은 접속번호로 다시 들어오면 이어서 할 수 있습니다.</p></section></main>';
+    return h;
+  }
+
+  function viewIntro() {
+    var n = countAnswered(), total = 0;
+    STAGES.forEach(function (_, s) { total += stageKeys(s).length; });
+    var h = '<main class="wrap">' + demoBar() + '<header class="hero">' + lemn(fill('todo'), true) +
+      '<h1 id="focus" tabindex="-1">' + (state.name ? esc(state.name) + ' 님, 환영합니다' : '환영합니다') + '</h1>' +
+      '<p class="lede">접속번호 ' + esc(state.num) + '번으로 들어오셨습니다. 각 문항에서 지금의 나에게 가장 가까운 하나를 고르십시오.</p></header>';
+    h += '<section class="card">';
+    if (!state.nameKnown) {
+      h += '<label for="name-in">이름 또는 닉네임 (선택)</label><input id="name-in" type="text" autocomplete="off" value="' + esc(state.name) + '">';
+    }
+    if (n > 0) {
+      h += '<p class="small">' + n + '개 문항의 답이 저장되어 있습니다.</p>' +
+        '<button type="button" class="btn wide" data-act="resume">이어서 하기</button>' +
+        '<button type="button" class="btn ghost wide" data-act="first">처음 단계부터 보기</button>';
+    } else {
+      h += '<button type="button" class="btn wide" data-act="begin">검사 시작</button>';
+    }
+    h += '<p class="msg" role="status" aria-live="polite">' + esc(state.introMsg) + '</p>' +
+      '<button type="button" class="btn ghost wide" data-act="logout">다른 접속번호로 들어가기</button></section></main>';
+    return h;
+  }
+
+  function optsHtml(name, key, opts) {
+    var cur = state.a[key], h = '<div class="opts" role="radiogroup">';
+    opts.forEach(function (o, k) {
+      var v = k + 1;
+      h += '<label class="opt' + (cur === v ? ' sel' : '') + '"><input type="radio" name="' + name + '" data-key="' + key + '" value="' + v + '"' + (cur === v ? ' checked' : '') + '>' +
+        '<span class="mark" aria-hidden="true">' + CIRC[k] + '</span><span class="txt">' + esc(o) + '</span></label>';
+    });
+    return h + '</div>';
+  }
+  function itemHtml(s, i) {
+    var it = STAGES[s].items[i];
+    var h = '<section class="item" id="q-' + s + '-' + i + '"><div class="qhead"><span class="qn">' + (i + 1) + '</span><div>';
+    if (it.sub) h += '<p class="qsub">' + esc(it.sub) + '</p>';
+    h += '<p class="qstem">' + esc(it.stem) + '</p></div></div>';
+    if (it.parts) {
+      it.parts.forEach(function (p, pi) {
+        var key = s + '.' + i + '.' + pi;
+        h += '<div class="part" id="q-' + s + '-' + i + '-' + pi + '"><p class="qstem pstem"><span class="pl">' + esc(p.label) + '</span>' + esc(p.stem) + '</p>' +
+          optsHtml('r' + key, key, p.opts) + '</div>';
+      });
+    } else {
+      var key2 = s + '.' + i;
+      h += optsHtml('r' + key2, key2, it.opts);
+    }
+    return h + '</section>';
+  }
+
+  function viewQuiz() {
+    var s = state.stage, st = STAGES[s];
+    var states = STAGES.map(function (_, i) { return i < s ? 'done' : (i === s ? 'now' : 'todo'); });
+    var h = '<main class="wrap">' + demoBar() + '<div class="prog">' + lemn(states, false, STAGES.length + '단계 중 ' + (s + 1) + '단계') +
+      '<p class="progtxt">' + (s + 1) + ' / ' + STAGES.length + '</p></div>';
+    h += '<header class="stagehead"><h2 id="focus" tabindex="-1">' + esc(st.qTitle) + '</h2>';
+    if (st.qSub) h += '<p class="qsubtitle">' + esc(st.qSub) + '</p>';
+    if (st.intro.length) h += '<div class="intro">' + st.intro.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</div>';
+    h += '</header>';
+    st.items.forEach(function (_, i) { h += itemHtml(s, i); });
+    h += '<p id="err" class="err" role="alert"></p>';
+    h += '<p class="savetxt" id="savetxt" role="status" aria-live="polite"></p>';
+    h += '<nav class="nav"><button type="button" class="btn ghost" data-act="prev">' + (s === 0 ? '처음으로' : '이전') + '</button>' +
+      '<button type="button" class="btn" data-act="next">' + (s === STAGES.length - 1 ? '결과 보기' : '다음') + '</button></nav></main>';
+    return h;
+  }
+
+  function viewResult() {
+    var rs = state.result.stages;
+    var states = rs.map(function (r) { return 'l' + r.level; });
+    var h = '<main class="wrap">' + demoBar() + '<header class="hero">' + lemn(states, false, '단계별 결과') +
+      '<h1 id="focus" tabindex="-1">' + (state.name ? esc(state.name) + ' 님의 결과' : '검사 결과') + '</h1>' +
+      '<p class="lede">' + NUMW[STAGES.length] + ' 개의 단계에서 지금 내가 서 있는 자리입니다. 짙게 채워질수록 뒤쪽 수준에 가깝습니다.</p></header>';
+    rs.forEach(function (r, s) {
+      var meter = '';
+      for (var k = 1; k <= 4; k++) meter += '<i' + (k <= r.level ? ' class="on"' : '') + '></i>';
+      h += '<article class="res" id="res-' + s + '"><div class="reshead"><span class="glyph" aria-hidden="true">' + STAGES[s].letter + '</span><div>' +
+        '<h3>' + esc(r.label) + '</h3><p class="lvline"><span class="chip">' + CIRC[r.level - 1] + ' 단계</span>' + esc(r.title) + '</p></div></div>' +
+        '<div class="meter" aria-hidden="true">' + meter + '</div>' +
+        '<details class="body"><summary>해설 보기</summary>' + levelBody(r) + '</details></article>';
+    });
+    h += '<section class="card tools"><p class="small">이 결과는 지금 이 시점의 나를 살펴보는 도구이며, 진단이 아닙니다. 같은 접속번호로 다시 들어오면 이 결과를 다시 볼 수 있습니다.</p>' +
+      '<button type="button" class="btn ghost wide" data-act="copy">결과 요약 복사</button>';
+    if (state.copyText) {
+      h += '<textarea id="copy-box" readonly rows="' + (STAGES.length + 2) + '">' + esc(state.copyText) + '</textarea><p class="msg">' + esc(state.copyMsg) + '</p>';
+    }
+    h += '<button type="button" class="btn ghost wide" data-act="logout">처음 화면으로</button></section></main>';
+    return h;
+  }
+
+  /* ---------- render ---------- */
+  function render(scrollTop) {
+    var html = state.view === 'intro' ? viewIntro() : state.view === 'quiz' ? viewQuiz() : state.view === 'result' ? viewResult() : viewLogin();
+    app.innerHTML = html;
+    if (scrollTop) {
+      try { window.scrollTo(0, 0); } catch (e) {}
+      var f = el('focus');
+      if (f && f.focus) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } }
+    }
+  }
+
+  /* ---------- saving ---------- */
+  var dirty = false, saveTimer = null, chain = Promise.resolve(true);
+  function setSave(t) { setText('savetxt', t); }
+  function scheduleSave() {
+    dirty = true;
+    clearTimeout(saveTimer);
+    setSave('');
+    saveTimer = setTimeout(flushSave, 1200);
+  }
+  function flushSave() {
+    clearTimeout(saveTimer);
+    if (!dirty || !state.code) return chain;
+    dirty = false;
+    var snapshot = JSON.parse(JSON.stringify(state.a)), stage = state.stage, name = state.name;
+    chain = chain.then(function () {
+      setSave('저장 중입니다.');
+      return Backend.save(state.code, snapshot, stage, name).then(function (r) {
+        if (r && r.ok) { setSave('저장되었습니다.'); return true; }
+        dirty = true;
+        setSave(r && r.error === 'locked' ? '이미 제출된 검사라서 더 저장하지 않습니다.' : '저장하지 못했습니다. 인터넷 연결을 확인해 주십시오. 답은 이 기기에 임시로 보관됩니다.');
+        return false;
+      });
+    });
+    return chain;
+  }
+
+  /* ---------- actions ---------- */
+  function errText(code) {
+    if (code === 'invalid') return '접속번호가 맞지 않습니다. 다시 확인해 주십시오.';
+    if (code === 'network') return '서버에 연결하지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주십시오.';
+    if (code === 'noconfig') return '이 페이지에는 아직 서버 주소가 설정되지 않았습니다.';
+    if (code === 'busy') return '지금 접속이 몰려 있습니다. 잠시 뒤에 다시 시도해 주십시오.';
+    return '처리하지 못했습니다. 잠시 뒤에 다시 시도해 주십시오.';
+  }
+  function setBusy(b) {
+    state.busy = b;
+    var btns = app.querySelectorAll('.btn');
+    for (var i = 0; i < btns.length; i++) btns[i].disabled = b;
+  }
+
+  function doLogin() {
+    if (state.busy) return;
+    var inp = el('code-in');
+    var code = normCode(inp ? inp.value : '');
+    if (!code) { state.loginMsg = '접속번호 형식이 맞지 않습니다. 숫자 2자리와 문자 8자리를 입력하십시오.'; setText('login-msg', state.loginMsg); return; }
+    setBusy(true); setText('login-msg', '확인 중입니다. 잠시 기다려 주십시오.');
+    Backend.login(code).then(function (res) {
+      setBusy(false);
+      if (!res || !res.ok) { state.loginMsg = errText(res && res.error); setText('login-msg', state.loginMsg); return; }
+      state.code = code; state.num = code.slice(0, 2);
+      state.name = res.name || ''; state.nameKnown = !!res.name;
+      state.a = res.answers || {};
+      var bk = lsGet(code);
+      if (bk && bk.a) { Object.keys(bk.a).forEach(function (k) { if (!state.a[k]) { state.a[k] = bk.a[k]; dirty = true; } }); }
+      state.stage = Math.min(res.stage || 0, STAGES.length - 1);
+      state.loginMsg = '';
+      if (res.status === '완료' && res.result) { state.result = res.result; state.view = 'result'; state.copyText = ''; }
+      else { state.view = 'intro'; }
+      render(true);
+    });
+  }
+
+  function summaryText() {
+    var lines = ['뫼비우스 반전 자기점검' + (state.name ? ' (' + state.name + ')' : '')];
+    state.result.stages.forEach(function (r) { lines.push(r.label + ' : ' + CIRC[r.level - 1] + ' ' + r.title); });
+    return lines.join('\n');
+  }
+  function firstMissing() {
+    var ks = stageKeys(state.stage);
+    for (var i = 0; i < ks.length; i++) if (!state.a[ks[i]]) return ks[i];
+    return null;
+  }
+  function elForKey(k) {
+    var p = k.split('.');
+    return el('q-' + p[0] + '-' + p[1] + (p.length > 2 ? '-' + p[2] : ''));
+  }
+  function label(k) {
+    var p = k.split('.'), it = STAGES[+p[0]].items[+p[1]];
+    return p.length > 2 ? it.parts[+p[2]].label : String(+p[1] + 1);
+  }
+  function captureName() { var n = el('name-in'); if (n) state.name = n.value.trim(); }
+
+  function act(name) {
+    if (name === 'login') { doLogin(); }
+    else if (name === 'begin' || name === 'first') {
+      captureName(); state.stage = 0; state.view = 'quiz'; dirty = true; render(true); scheduleSave();
+    } else if (name === 'resume') {
+      captureName(); state.stage = firstIncompleteStage(); state.view = 'quiz'; render(true);
+    } else if (name === 'logout') {
+      flushSave();
+      state.view = 'login'; state.code = ''; state.num = ''; state.a = {}; state.name = ''; state.result = null; state.loginMsg = ''; state.copyText = ''; render(true);
+    } else if (name === 'prev') {
+      if (state.stage === 0) { state.view = 'intro'; } else { state.stage--; }
+      lsSet(); dirty = true; render(true); scheduleSave();
+    } else if (name === 'next') {
+      var miss = firstMissing();
+      if (miss) {
+        setText('err', label(miss) + '번 문항에 아직 답하지 않았습니다. 답을 고른 뒤 다음으로 넘어가십시오.');
+        var e = elForKey(miss);
+        if (e) { e.classList.add('missing'); try { e.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} }
+        return;
+      }
+      if (state.stage === STAGES.length - 1) { submitAll(); return; }
+      state.stage++; lsSet(); dirty = true; render(true); scheduleSave();
+    } else if (name === 'copy') {
+      state.copyText = summaryText(); state.copyMsg = '';
+      render(false);
+      var box = el('copy-box'), done = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(state.copyText).then(function () {
+            state.copyMsg = '복사했습니다.'; var m = document.querySelector('.tools .msg'); if (m) m.textContent = state.copyMsg;
+          }, function () {
+            state.copyMsg = '위 내용을 길게 눌러 복사하십시오.'; var m = document.querySelector('.tools .msg'); if (m) m.textContent = state.copyMsg;
+          });
+          done = true;
+        }
+      } catch (x) {}
+      if (!done) { state.copyMsg = '위 내용을 길게 눌러 복사하십시오.'; var m2 = document.querySelector('.tools .msg'); if (m2) m2.textContent = state.copyMsg; }
+      if (box && box.select) { try { box.focus(); box.select(); } catch (x) {} }
+    }
+  }
+
+  function submitAll() {
+    if (state.busy) return;
+    setBusy(true); setText('err', ''); setSave('제출하는 중입니다. 잠시 기다려 주십시오.');
+    clearTimeout(saveTimer); dirty = false;
+    lsSet();
+    Backend.submit(state.code, state.a, state.name).then(function (res) {
+      setBusy(false);
+      if (res && res.ok && res.result) {
+        state.result = res.result; state.view = 'result'; state.copyText = ''; dirty = false; render(true);
+      } else {
+        setSave('');
+        setText('err', res && res.error === 'incomplete' ? '답하지 않은 문항이 있습니다. 앞 단계를 확인해 주십시오.' : errText(res && res.error));
+      }
+    });
+  }
+
+  app.addEventListener('click', function (e) {
+    var t = e.target;
+    while (t && t !== app && !(t.getAttribute && t.getAttribute('data-act'))) t = t.parentNode;
+    if (t && t !== app && !t.disabled) act(t.getAttribute('data-act'));
+  });
+  app.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t && t.type === 'radio' && t.getAttribute('data-key')) {
+      var key = t.getAttribute('data-key');
+      state.a[key] = parseInt(t.value, 10);
+      var group = app.querySelectorAll('input[name="' + t.name + '"]');
+      for (var i = 0; i < group.length; i++) {
+        var lab = group[i].parentNode;
+        if (group[i].checked) lab.classList.add('sel'); else lab.classList.remove('sel');
+      }
+      var blk = elForKey(key); if (blk) blk.classList.remove('missing');
+      setText('err', '');
+      lsSet(); scheduleSave();
+    }
+  });
+  app.addEventListener('input', function (e) {
+    if (e.target && e.target.id === 'name-in') state.name = e.target.value;
+  });
+  app.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target && e.target.id === 'code-in') { e.preventDefault(); doLogin(); }
+  });
+  window.addEventListener('pagehide', function () { if (dirty && state.view === 'quiz') { lsSet(); } });
+
+  render(false);
+})();
+</script>
+</body>
+</html>
