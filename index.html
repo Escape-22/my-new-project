@@ -692,6 +692,9 @@ textarea { line-height: 1.6; margin-top: .7rem; resize: vertical; }
         setSave('');
         setText('err', res && res.error === 'incomplete' ? '답하지 않은 문항이 있습니다. 앞 단계를 확인해 주십시오.' : errText(res && res.error));
       }
+    }).catch(function () {
+      setBusy(false); setSave('');
+      setText('err', '제출 중 오류가 발생했습니다. 다시 시도해 주십시오.');
     });
   }
 
