@@ -93,9 +93,17 @@ button{font:inherit;font-weight:700;border-radius:10px;padding:.7rem 1.2rem;curs
     Array.prototype.forEach.call(app.querySelectorAll('.row'),function(b){b.onclick=function(){viewPerson(list[Number(b.getAttribute('data-i'))]);};});
     window.scrollTo(0,0);
   }
+  function pdfHow(){
+    var ua=navigator.userAgent||'';
+    if(/KAKAOTALK/i.test(ua))return '카카오톡 안에서는 PDF 저장이 되지 않습니다. 오른쪽 위 메뉴(점 세 개)에서 "다른 브라우저로 열기"를 누른 뒤 저장하십시오.';
+    if(/iPhone|iPad|iPod/i.test(ua)||(/Macintosh/.test(ua)&&'ontouchend' in document))return '버튼을 누르고 인쇄 화면이 뜨면, 위쪽의 공유 아이콘(네모에 위쪽 화살표)을 눌러 "파일에 저장"을 고르십시오.';
+    if(/Android/i.test(ua))return '버튼을 누르고 인쇄 화면이 뜨면, 위쪽의 프린터를 "PDF로 저장"으로 바꾸고 다운로드 버튼을 누르십시오.';
+    return '버튼을 누르고 인쇄 창이 뜨면, "대상"을 "PDF로 저장"으로 바꾸십시오. "설정 더보기"에서 "머리글과 바닥글"의 체크를 끄면 이 페이지 주소가 찍히지 않습니다. 그다음 "저장"을 누르고 파일 이름을 그분 성함으로 정하십시오.';
+  }
   function viewPerson(p){
     var a=p.answers||{};
-    var h='<div class="btns noprint" style="margin:0 0 1rem"><button class="sec" id="back">목록으로</button><button class="sec" id="prt">인쇄하기</button></div>'+
+    var h='<div class="btns noprint" style="margin:0 0 1rem"><button class="sec" id="back">목록으로</button><button class="pri" id="prt">PDF로 저장하기</button></div>'+
+      '<p class="lede noprint" style="font-size:1rem">'+pdfHow()+'</p>'+
       '<h1>'+esc(label(p))+' 님의 긴 해설</h1><p class="count">접속번호 '+esc(p.num)+' · '+esc(p.status)+(p.submitted?' · '+esc(p.submitted)+' 제출':'')+'</p>';
     var picks=S.map(function(st,s){return st.title+' : '+st.items.map(function(_,i){var v=Number(a[s+'.'+i])||0;return v?C[v-1]:'-';}).join(' ');});
     h+='<section class="card"><p class="qn">응답 한눈에 보기</p><p class="picks">'+picks.map(esc).join('<br>')+'</p></section>';
