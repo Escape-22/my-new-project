@@ -515,7 +515,7 @@ textarea { line-height: 1.6; margin-top: .7rem; resize: vertical; }
     out.push(p1);
 
     var base = Math.round(mean);
-    var low = vals.filter(function (x) { return x.v <= base - 1; }).sort(function (a, b) { return a.v - b.v; });
+    var low = vals.filter(function (x) { return x.v <= 2 && x.v <= mean - 1; }).sort(function (a, b) { return a.v - b.v; });
     var name = function (x) { return STAGES[x.s].label + ' ' + (x.i + 1) + '번(' + STAGES[x.s].items[x.i].topic + ')'; };
     if (low.length > 5) out.push('다른 자리보다 뒤에 있는 곳이 여러 군데 있습니다. 한꺼번에 다 돌보려 하기보다, 아래에 안내하는 한 자리부터 시작해 보십시오.');
     else if (low.length) out.push('눈에 띄는 곳은 ' + low.slice(0, 3).map(name).join(', ') + '입니다. 다른 자리보다 한 걸음 뒤에 있는 곳이라, 여기에 마음을 조금 더 기울여 보시면 좋겠습니다.');
